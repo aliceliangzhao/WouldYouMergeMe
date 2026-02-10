@@ -1,0 +1,21 @@
+.bubble-game {
+  width: 100vw;
+  height: 100vh;
+  background: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-header {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+}
+
+.game-header h1 {
+  color: white;
+  font-size: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}

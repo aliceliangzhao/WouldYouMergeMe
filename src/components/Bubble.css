@@ -1,0 +1,58 @@
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(173, 216, 230, 0.9), rgba(135, 206, 250, 0.7));
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.bubble:hover {
+  transform: scale(1.05);
+}
+
+.bubble-value {
+  font-size: 1.2rem;
+  font-weight: regular;
+  color: #333;
+  user-select: none;
+}
+
+/* Dragging state - scale, shadow, z-index */
+.bubble.dragging {
+  cursor: grabbing;
+  transform: scale(1.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+/* Can merge state - green border, pulse animation */
+.bubble.can-merge {
+  border: 3px solid #4CAF50;
+  animation: pulse 0.5s infinite;
+}
+
+/* Cannot merge state - red border */
+.bubble.cannot-merge {
+  border: 3px solid #f44336;
+}
+
+/* Pulse animation for mergeable bubbles */
+@keyframes pulse {
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  50% { 
+    transform: scale(1.05); 
+  }
+}
+
+/* Pulse animation for dragging + can-merge */
+.bubble.dragging.can-merge {
+  animation: pulse 0.5s infinite;
+}
