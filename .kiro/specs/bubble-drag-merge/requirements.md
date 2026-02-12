@@ -116,6 +116,6 @@ This document specifies the requirements for adding drag-and-merge functionality
 2. Spacing among bubbles
 3. Visual of the view, including the bubbles, collision indicator
 4. Responsiveness
-5. Respawn more bubbles after merging
+5. Respawn more bubbles after merging (kind of, needs fine-tuning)
 6. The position of the bubble when clicked. The current animation is that the bubble shifts its position when clicked
 7. The merging animation needs to be more subtle, the current one is too abrupt
