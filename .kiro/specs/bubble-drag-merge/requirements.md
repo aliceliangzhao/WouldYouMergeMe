@@ -108,3 +108,12 @@ This document specifies the requirements for adding drag-and-merge functionality
 2. WHEN multiple matching bubbles are touched, THE System SHALL merge with the closest matching bubble first
 3. WHEN a merge occurs during multi-bubble collision, THE System SHALL exit drag mode immediately
 4. WHEN multiple non-matching bubbles are touched, THE System SHALL apply repulsion to all of them
+
+#### To-do
+1. Merging bubbles should not release the dragged_bubble,
+2. Spacing among bubbles,
+3. Visual of the view, including the bubbles, collision indicator,
+4. Responsiveness
+5. Resprawn more bubbles after merging
+6. The position of the bubble when clicked. The current animiation is that the bubble shifts its position when clicked
+7. The merging animation needs to be more subtle, the current one is too abrupted
