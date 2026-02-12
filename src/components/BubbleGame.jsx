@@ -92,9 +92,108 @@ function BubbleGame() {
   }
 
   /**
+   * Spawn a new bubble at a random position after a merge.
+   * Pushes existing bubbles away with animated ease-in-ease-out effect.
+   * 
+   * @param {Array} currentBubbles - Current array of bubbles
+   */
+  const spawnNewBubble = (currentBubbles) => {
+    const width = window.innerWidth
+    const height = window.innerHeight
+    const radius = 25
+    
+    // Random value from [1, 2, 4, 8]
+    const possibleValues = [1, 2, 4, 8]
+    const value = possibleValues[Math.floor(Math.random() * possibleValues.length)]
+    
+    // Random position within game boundaries
+    const x = Math.random() * (width - radius * 2) + radius
+    const y = Math.random() * (height - 100 - radius * 2) + radius + 80
+    
+    const newBubble = {
+      id: Date.now() + Math.random(), // Ensure unique ID
+      x,
+      y,
+      vx: 0,
+      vy: 0,
+      value,
+      radius,
+      isDragging: false,
+      isHighlighted: false,
+      cannotMerge: false
+    }
+    
+    // Calculate target positions for overlapping bubbles
+    const pushTargets = []
+    
+    for (const bubble of currentBubbles) {
+      // Skip the dragged bubble
+      if (bubble.id === dragStateRef.current.draggedBubbleId) continue
+      
+      const dx = bubble.x - newBubble.x
+      const dy = bubble.y - newBubble.y
+      const distance = Math.sqrt(dx * dx + dy * dy)
+      const minDist = newBubble.radius + bubble.radius
+      
+      if (distance < minDist) {
+        // Calculate push direction
+        const epsilon = 0.0001
+        const actualDistance = Math.max(distance, epsilon)
+        const dirX = dx / actualDistance
+        const dirY = dy / actualDistance
+        
+        // Calculate target position (push away to eliminate overlap)
+        const overlap = minDist - distance
+        const targetX = bubble.x + dirX * overlap
+        const targetY = bubble.y + dirY * overlap
+        
+        // Clamp to boundaries
+        const clampedTargetX = Math.max(bubble.radius, Math.min(width - bubble.radius, targetX))
+        const clampedTargetY = Math.max(80 + bubble.radius, Math.min(height - bubble.radius, targetY))
+        
+        pushTargets.push({
+          bubble,
+          startX: bubble.x,
+          startY: bubble.y,
+          targetX: clampedTargetX,
+          targetY: clampedTargetY
+        })
+      }
+    }
+    
+    // Animate the push effect with ease-in-ease-out
+    if (pushTargets.length > 0) {
+      const duration = 300 // milliseconds
+      const startTime = Date.now()
+      
+      const animatePush = () => {
+        const elapsed = Date.now() - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        
+        // Ease-in-ease-out function (smoothstep)
+        const eased = progress * progress * (3 - 2 * progress)
+        
+        for (const target of pushTargets) {
+          target.bubble.x = target.startX + (target.targetX - target.startX) * eased
+          target.bubble.y = target.startY + (target.targetY - target.startY) * eased
+        }
+        
+        if (progress < 1) {
+          requestAnimationFrame(animatePush)
+        }
+      }
+      
+      animatePush()
+    }
+    
+    currentBubbles.push(newBubble)
+  }
+
+  /**
    * Merge two bubbles with matching values.
    * Creates a new bubble at the cursor position with summed value and removes originals.
    * Continues drag mode with the newly created bubble.
+   * Spawns a new random bubble after merge.
    * 
    * @param {Object} draggedBubble - The bubble being dragged
    * @param {Object} targetBubble - The bubble to merge with
@@ -105,7 +204,7 @@ function BubbleGame() {
     const newX = draggedBubble.x
     const newY = draggedBubble.y
 
-    const newBubble = {
+    const mergedBubble = {
       id: Date.now(),
       x: newX,
       y: newY,
@@ -121,18 +220,21 @@ function BubbleGame() {
     const updatedBubbles = bubblesRef.current.filter(
       b => b.id !== draggedBubble.id && b.id !== targetBubble.id
     )
-    updatedBubbles.push(newBubble)
+    updatedBubbles.push(mergedBubble)
+    
+    // Spawn a new bubble after merge
+    spawnNewBubble(updatedBubbles)
 
     bubblesRef.current = updatedBubbles
     setBubbles([...updatedBubbles])
 
-    // Continue drag mode with the new bubble
+    // Continue drag mode with the merged bubble
     setDragState(prev => ({
       ...prev,
-      draggedBubbleId: newBubble.id
+      draggedBubbleId: mergedBubble.id
     }))
 
-    return newBubble
+    return mergedBubble
   }
 
   /**

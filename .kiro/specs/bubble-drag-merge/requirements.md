@@ -112,7 +112,7 @@ This document specifies the requirements for adding drag-and-merge functionality
 5. WHEN the Dragged_Bubble merges and continues dragging, THE System SHALL immediately check for new collisions with the merged bubble
 
 #### To-do
-1. ~~Merging bubbles should not release the dragged_bubble~~ (Updated in Requirement 4.5-4.6)
+1. ~~Merging bubbles should not release the dragged_bubble~~ (Updated in Requirement 4.5-4.6) (done)
 2. Spacing among bubbles
 3. Visual of the view, including the bubbles, collision indicator
 4. Responsiveness
