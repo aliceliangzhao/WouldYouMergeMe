@@ -93,33 +93,29 @@ function BubbleGame() {
 
   /**
    * Merge two bubbles with matching values.
-   * Creates a new bubble at the midpoint with summed value and removes originals.
+   * Creates a new bubble at the cursor position with summed value and removes originals.
+   * Continues drag mode with the newly created bubble.
    * 
    * @param {Object} draggedBubble - The bubble being dragged
    * @param {Object} targetBubble - The bubble to merge with
+   * @returns {Object} The newly created merged bubble
    */
   const mergeBubbles = (draggedBubble, targetBubble) => {
-    const newX = (draggedBubble.x + targetBubble.x) / 2
-    const newY = (draggedBubble.y + targetBubble.y) / 2
-
-    // Clamp to boundaries
-    const width = window.innerWidth
-    const height = window.innerHeight
-    const radius = draggedBubble.radius
-    
-    const clampedX = Math.max(radius, Math.min(newX, width - radius))
-    const clampedY = Math.max(80 + radius, Math.min(newY, height - radius))
+    // Use current cursor position (dragged bubble position) for the new bubble
+    const newX = draggedBubble.x
+    const newY = draggedBubble.y
 
     const newBubble = {
       id: Date.now(),
-      x: clampedX,
-      y: clampedY,
+      x: newX,
+      y: newY,
       vx: 0,
       vy: 0,
       value: draggedBubble.value + targetBubble.value,
       radius: draggedBubble.radius,
-      isDragging: false,
-      isHighlighted: false
+      isDragging: true, // Keep dragging state
+      isHighlighted: false,
+      cannotMerge: false
     }
 
     const updatedBubbles = bubblesRef.current.filter(
@@ -130,14 +126,13 @@ function BubbleGame() {
     bubblesRef.current = updatedBubbles
     setBubbles([...updatedBubbles])
 
-    // Exit drag mode
-    setDragState({
-      isDragging: false,
-      draggedBubbleId: null,
-      lastMouseX: 0,
-      lastMouseY: 0,
-      dragStartTime: 0
-    })
+    // Continue drag mode with the new bubble
+    setDragState(prev => ({
+      ...prev,
+      draggedBubbleId: newBubble.id
+    }))
+
+    return newBubble
   }
 
   /**
@@ -245,8 +240,25 @@ function BubbleGame() {
         bubble.isHighlighted = true
         closestCollision.targetBubble.isHighlighted = true
         
-        mergeBubbles(bubble, closestCollision.targetBubble)
-        return // Exit early after merge
+        const mergedBubble = mergeBubbles(bubble, closestCollision.targetBubble)
+        
+        // Continue checking for collisions with the newly merged bubble
+        // This allows chain merging in a single drag gesture
+        const { closestCollision: newCollision, allCollisions: newAllCollisions } = 
+          detectDragCollision(mergedBubble, bubblesRef.current)
+        
+        if (newCollision.collided && !newCollision.canMerge) {
+          // Apply repulsion to non-matching bubbles after merge
+          for (const collision of newAllCollisions) {
+            if (!collision.canMerge) {
+              mergedBubble.cannotMerge = true
+              collision.targetBubble.cannotMerge = true
+              applyRepulsion(mergedBubble, collision.targetBubble)
+            }
+          }
+        }
+        
+        return // Exit after handling merge
       } else {
         // Apply repulsion to all non-matching collisions
         for (const collision of allCollisions) {

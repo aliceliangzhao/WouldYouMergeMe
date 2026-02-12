@@ -58,9 +58,10 @@ This document specifies the requirements for adding drag-and-merge functionality
 
 1. WHEN the Dragged_Bubble collides with a Target_Bubble AND both bubbles have identical Bubble_Values, THE System SHALL merge the two bubbles
 2. WHEN bubbles merge, THE System SHALL create a new bubble with a value equal to the sum of the two merged bubbles
-3. WHEN bubbles merge, THE System SHALL position the new bubble at the midpoint between the two original bubbles
+3. WHEN bubbles merge, THE System SHALL position the new bubble at the current cursor position
 4. WHEN bubbles merge, THE System SHALL remove both original bubbles from the game
-5. WHEN bubbles merge, THE System SHALL exit drag mode and apply physics to the new bubble
+5. WHEN bubbles merge, THE System SHALL continue drag mode with the newly created bubble as the Dragged_Bubble
+6. WHEN bubbles merge, THE new bubble SHALL immediately follow the cursor and be available for further merging
 
 ### Requirement 5: Bubble Repulsion
 
@@ -106,14 +107,15 @@ This document specifies the requirements for adding drag-and-merge functionality
 
 1. WHEN the Dragged_Bubble collides with multiple bubbles simultaneously, THE System SHALL process collisions in order of proximity
 2. WHEN multiple matching bubbles are touched, THE System SHALL merge with the closest matching bubble first
-3. WHEN a merge occurs during multi-bubble collision, THE System SHALL exit drag mode immediately
+3. WHEN a merge occurs during multi-bubble collision, THE System SHALL continue drag mode with the newly merged bubble
 4. WHEN multiple non-matching bubbles are touched, THE System SHALL apply repulsion to all of them
+5. WHEN the Dragged_Bubble merges and continues dragging, THE System SHALL immediately check for new collisions with the merged bubble
 
 #### To-do
-1. Merging bubbles should not release the dragged_bubble,
-2. Spacing among bubbles,
-3. Visual of the view, including the bubbles, collision indicator,
+1. ~~Merging bubbles should not release the dragged_bubble~~ (Updated in Requirement 4.5-4.6)
+2. Spacing among bubbles
+3. Visual of the view, including the bubbles, collision indicator
 4. Responsiveness
-5. Resprawn more bubbles after merging
-6. The position of the bubble when clicked. The current animiation is that the bubble shifts its position when clicked
-7. The merging animation needs to be more subtle, the current one is too abrupted
+5. Respawn more bubbles after merging
+6. The position of the bubble when clicked. The current animation is that the bubble shifts its position when clicked
+7. The merging animation needs to be more subtle, the current one is too abrupt
