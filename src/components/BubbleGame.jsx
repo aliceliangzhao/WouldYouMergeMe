@@ -432,6 +432,177 @@ function BubbleGame() {
     }
   }, [])
 
+  // Handle window resize - fill new space with bubbles or squeeze/burst when shrinking
+  useEffect(() => {
+    let resizeTimeout
+    
+    const handleResize = () => {
+      // Debounce resize events
+      clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(() => {
+        const width = window.innerWidth
+        const height = window.innerHeight
+        const radius = 25
+        const minDistance = radius * 2
+        
+        // Calculate how many bubbles should exist based on new screen size
+        const area = width * (height - 100)
+        const bubbleArea = Math.PI * radius * radius
+        const targetBubbleCount = Math.floor(area / (bubbleArea * 1.5))
+        
+        const currentBubbles = [...bubblesRef.current]
+        const currentCount = currentBubbles.length
+        
+        if (currentCount < targetBubbleCount) {
+          // Screen got bigger - add bubbles
+          const bubblesNeeded = targetBubbleCount - currentCount
+          const newBubbles = []
+          let attempts = 0
+          const maxAttempts = bubblesNeeded * 20
+          
+          while (newBubbles.length < bubblesNeeded && attempts < maxAttempts) {
+            const x = Math.random() * (width - radius * 2) + radius
+            const y = Math.random() * (height - 100 - radius * 2) + radius + 80
+            
+            // Check distance to all existing bubbles
+            let tooClose = false
+            const allBubbles = [...currentBubbles, ...newBubbles]
+            
+            for (const bubble of allBubbles) {
+              const dx = x - bubble.x
+              const dy = y - bubble.y
+              const distance = Math.sqrt(dx * dx + dy * dy)
+              
+              if (distance < minDistance) {
+                tooClose = true
+                break
+              }
+            }
+            
+            if (!tooClose) {
+              newBubbles.push({
+                id: Date.now() + newBubbles.length + Math.random(),
+                x,
+                y,
+                vx: 0,
+                vy: 0,
+                value: 1,
+                radius,
+                isDragging: false,
+                isHighlighted: false,
+                cannotMerge: false
+              })
+            }
+            
+            attempts++
+          }
+          
+          if (newBubbles.length > 0) {
+            const updatedBubbles = [...currentBubbles, ...newBubbles]
+            bubblesRef.current = updatedBubbles
+            setBubbles(updatedBubbles)
+          }
+        } else if (currentCount > targetBubbleCount) {
+          // Screen got smaller - squeeze bubbles together
+          const squeezedBubbles = currentBubbles.map(bubble => {
+            // Clamp bubble positions to new boundaries
+            const clampedX = Math.max(radius, Math.min(width - radius, bubble.x))
+            const clampedY = Math.max(80 + radius, Math.min(height - radius, bubble.y))
+            
+            return {
+              ...bubble,
+              x: clampedX,
+              y: clampedY
+            }
+          })
+          
+          // Try to resolve overlaps by pushing bubbles apart
+          const maxIterations = 100
+          let iteration = 0
+          let hasOverlap = true
+          
+          while (hasOverlap && iteration < maxIterations) {
+            hasOverlap = false
+            iteration++
+            
+            for (let i = 0; i < squeezedBubbles.length; i++) {
+              for (let j = i + 1; j < squeezedBubbles.length; j++) {
+                const b1 = squeezedBubbles[i]
+                const b2 = squeezedBubbles[j]
+                
+                // Skip dragged bubble
+                if (b1.id === dragStateRef.current.draggedBubbleId || 
+                    b2.id === dragStateRef.current.draggedBubbleId) continue
+                
+                const dx = b2.x - b1.x
+                const dy = b2.y - b1.y
+                const distance = Math.sqrt(dx * dx + dy * dy)
+                const minDist = b1.radius + b2.radius
+                
+                if (distance < minDist) {
+                  hasOverlap = true
+                  
+                  const epsilon = 0.0001
+                  const actualDistance = Math.max(distance, epsilon)
+                  const dirX = dx / actualDistance
+                  const dirY = dy / actualDistance
+                  const overlap = minDist - distance
+                  
+                  // Push both bubbles apart
+                  const pushAmount = overlap / 2
+                  
+                  b1.x -= dirX * pushAmount
+                  b1.y -= dirY * pushAmount
+                  b2.x += dirX * pushAmount
+                  b2.y += dirY * pushAmount
+                  
+                  // Clamp to boundaries
+                  b1.x = Math.max(radius, Math.min(width - radius, b1.x))
+                  b1.y = Math.max(80 + radius, Math.min(height - radius, b1.y))
+                  b2.x = Math.max(radius, Math.min(width - radius, b2.x))
+                  b2.y = Math.max(80 + radius, Math.min(height - radius, b2.y))
+                }
+              }
+            }
+          }
+          
+          // If still overlapping after max iterations, burst random bubbles
+          if (hasOverlap) {
+            const bubblesNeededToRemove = currentCount - targetBubbleCount
+            const nonDraggedBubbles = squeezedBubbles.filter(
+              b => b.id !== dragStateRef.current.draggedBubbleId
+            )
+            
+            // Randomly select bubbles to burst
+            const shuffled = [...nonDraggedBubbles].sort(() => Math.random() - 0.5)
+            const bubblesKept = shuffled.slice(bubblesNeededToRemove)
+            
+            // Add back dragged bubble if it exists
+            const draggedBubble = squeezedBubbles.find(
+              b => b.id === dragStateRef.current.draggedBubbleId
+            )
+            if (draggedBubble) {
+              bubblesKept.push(draggedBubble)
+            }
+            
+            bubblesRef.current = bubblesKept
+            setBubbles([...bubblesKept])
+          } else {
+            bubblesRef.current = squeezedBubbles
+            setBubbles([...squeezedBubbles])
+          }
+        }
+      }, 300) // Wait 300ms after resize stops
+    }
+    
+    window.addEventListener('resize', handleResize)
+    
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      clearTimeout(resizeTimeout)
+    }
+  }, [])
+
   // Initialize bubbles on mount - fill screen with non-overlapping bubbles
   useEffect(() => {
     const width = window.innerWidth
