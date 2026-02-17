@@ -92,108 +92,10 @@ function BubbleGame() {
   }
 
   /**
-   * Spawn a new bubble at a random position after a merge.
-   * Pushes existing bubbles away with animated ease-in-ease-out effect.
-   * 
-   * @param {Array} currentBubbles - Current array of bubbles
-   */
-  const spawnNewBubble = (currentBubbles) => {
-    const width = window.innerWidth
-    const height = window.innerHeight
-    const radius = 25
-    
-    // Random value from [1, 2, 4, 8]
-    const possibleValues = [1, 2, 4, 8]
-    const value = possibleValues[Math.floor(Math.random() * possibleValues.length)]
-    
-    // Random position within game boundaries
-    const x = Math.random() * (width - radius * 2) + radius
-    const y = Math.random() * (height - 100 - radius * 2) + radius + 80
-    
-    const newBubble = {
-      id: Date.now() + Math.random(), // Ensure unique ID
-      x,
-      y,
-      vx: 0,
-      vy: 0,
-      value,
-      radius,
-      isDragging: false,
-      isHighlighted: false,
-      cannotMerge: false
-    }
-    
-    // Calculate target positions for overlapping bubbles
-    const pushTargets = []
-    
-    for (const bubble of currentBubbles) {
-      // Skip the dragged bubble
-      if (bubble.id === dragStateRef.current.draggedBubbleId) continue
-      
-      const dx = bubble.x - newBubble.x
-      const dy = bubble.y - newBubble.y
-      const distance = Math.sqrt(dx * dx + dy * dy)
-      const minDist = newBubble.radius + bubble.radius
-      
-      if (distance < minDist) {
-        // Calculate push direction
-        const epsilon = 0.0001
-        const actualDistance = Math.max(distance, epsilon)
-        const dirX = dx / actualDistance
-        const dirY = dy / actualDistance
-        
-        // Calculate target position (push away to eliminate overlap)
-        const overlap = minDist - distance
-        const targetX = bubble.x + dirX * overlap
-        const targetY = bubble.y + dirY * overlap
-        
-        // Clamp to boundaries
-        const clampedTargetX = Math.max(bubble.radius, Math.min(width - bubble.radius, targetX))
-        const clampedTargetY = Math.max(80 + bubble.radius, Math.min(height - bubble.radius, targetY))
-        
-        pushTargets.push({
-          bubble,
-          startX: bubble.x,
-          startY: bubble.y,
-          targetX: clampedTargetX,
-          targetY: clampedTargetY
-        })
-      }
-    }
-    
-    // Animate the push effect with ease-in-ease-out
-    if (pushTargets.length > 0) {
-      const duration = 300 // milliseconds
-      const startTime = Date.now()
-      
-      const animatePush = () => {
-        const elapsed = Date.now() - startTime
-        const progress = Math.min(elapsed / duration, 1)
-        
-        // Ease-in-ease-out function (smoothstep)
-        const eased = progress * progress * (3 - 2 * progress)
-        
-        for (const target of pushTargets) {
-          target.bubble.x = target.startX + (target.targetX - target.startX) * eased
-          target.bubble.y = target.startY + (target.targetY - target.startY) * eased
-        }
-        
-        if (progress < 1) {
-          requestAnimationFrame(animatePush)
-        }
-      }
-      
-      animatePush()
-    }
-    
-    currentBubbles.push(newBubble)
-  }
-
-  /**
    * Merge two bubbles with matching values.
    * Creates a new bubble at the cursor position with summed value and removes originals.
    * Continues drag mode with the newly created bubble.
-   * Spawns a new random bubble after merge.
+   * Spawns at least 5 new bubbles after merge with random values from [1, 2, 4, 8].
    * 
    * @param {Object} draggedBubble - The bubble being dragged
    * @param {Object} targetBubble - The bubble to merge with
@@ -204,13 +106,15 @@ function BubbleGame() {
     const newX = draggedBubble.x
     const newY = draggedBubble.y
 
+    const mergedValue = draggedBubble.value + targetBubble.value
+
     const mergedBubble = {
       id: Date.now(),
       x: newX,
       y: newY,
       vx: 0,
       vy: 0,
-      value: draggedBubble.value + targetBubble.value,
+      value: mergedValue,
       radius: draggedBubble.radius,
       isDragging: true, // Keep dragging state
       isHighlighted: false,
@@ -222,8 +126,60 @@ function BubbleGame() {
     )
     updatedBubbles.push(mergedBubble)
     
-    // Spawn a new bubble after merge
-    spawnNewBubble(updatedBubbles)
+    // Spawn at least 5 new bubbles after merge
+    const numNewBubbles = Math.floor(Math.random() * 3) + 5 // 5-7 bubbles
+    const width = window.innerWidth
+    const height = window.innerHeight
+    const radius = 25
+    const minDistance = radius * 2.5
+    const possibleValues = [1, 2, 4, 8]
+    
+    // Create new bubbles with random values from [1, 2, 4, 8]
+    for (let i = 0; i < numNewBubbles; i++) {
+      const value = possibleValues[Math.floor(Math.random() * possibleValues.length)]
+      let attempts = 0
+      const maxAttempts = 100
+      let validPosition = false
+      
+      while (!validPosition && attempts < maxAttempts) {
+        const x = Math.random() * (width - radius * 2) + radius
+        const y = Math.random() * (height - 100 - radius * 2) + radius + 80
+        
+        // Check distance to all existing bubbles
+        validPosition = true
+        for (const bubble of updatedBubbles) {
+          const dx = x - bubble.x
+          const dy = y - bubble.y
+          const distance = Math.sqrt(dx * dx + dy * dy)
+          
+          if (distance < minDistance) {
+            validPosition = false
+            break
+          }
+        }
+        
+        if (validPosition) {
+          // Add random initial velocity for movement when spawning
+          const speed = 0.2 + Math.random() * 1.1 // Random speed between 2-5
+          const angle = Math.random() * Math.PI * 2 // Random direction
+          
+          updatedBubbles.push({
+            id: Date.now() + i + Math.random(),
+            x,
+            y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            value,
+            radius,
+            isDragging: false,
+            isHighlighted: false,
+            cannotMerge: false
+          })
+        }
+        
+        attempts++
+      }
+    }
 
     bubblesRef.current = updatedBubbles
     setBubbles([...updatedBubbles])
@@ -432,228 +388,59 @@ function BubbleGame() {
     }
   }, [])
 
-  // Handle window resize - fill new space with bubbles or squeeze/burst when shrinking
-  useEffect(() => {
-    let resizeTimeout
-    
-    const handleResize = () => {
-      // Debounce resize events
-      clearTimeout(resizeTimeout)
-      resizeTimeout = setTimeout(() => {
-        const width = window.innerWidth
-        const height = window.innerHeight
-        const radius = 25
-        const minDistance = radius * 2
-        
-        // Calculate how many bubbles should exist based on new screen size
-        const area = width * (height - 100)
-        const bubbleArea = Math.PI * radius * radius
-        const targetBubbleCount = Math.floor(area / (bubbleArea * 1.5))
-        
-        const currentBubbles = [...bubblesRef.current]
-        const currentCount = currentBubbles.length
-        
-        if (currentCount < targetBubbleCount) {
-          // Screen got bigger - add bubbles
-          const bubblesNeeded = targetBubbleCount - currentCount
-          const newBubbles = []
-          let attempts = 0
-          const maxAttempts = bubblesNeeded * 20
-          
-          while (newBubbles.length < bubblesNeeded && attempts < maxAttempts) {
-            const x = Math.random() * (width - radius * 2) + radius
-            const y = Math.random() * (height - 100 - radius * 2) + radius + 80
-            
-            // Check distance to all existing bubbles
-            let tooClose = false
-            const allBubbles = [...currentBubbles, ...newBubbles]
-            
-            for (const bubble of allBubbles) {
-              const dx = x - bubble.x
-              const dy = y - bubble.y
-              const distance = Math.sqrt(dx * dx + dy * dy)
-              
-              if (distance < minDistance) {
-                tooClose = true
-                break
-              }
-            }
-            
-            if (!tooClose) {
-              newBubbles.push({
-                id: Date.now() + newBubbles.length + Math.random(),
-                x,
-                y,
-                vx: 0,
-                vy: 0,
-                value: 1,
-                radius,
-                isDragging: false,
-                isHighlighted: false,
-                cannotMerge: false
-              })
-            }
-            
-            attempts++
-          }
-          
-          if (newBubbles.length > 0) {
-            const updatedBubbles = [...currentBubbles, ...newBubbles]
-            bubblesRef.current = updatedBubbles
-            setBubbles(updatedBubbles)
-          }
-        } else if (currentCount > targetBubbleCount) {
-          // Screen got smaller - squeeze bubbles together
-          const squeezedBubbles = currentBubbles.map(bubble => {
-            // Clamp bubble positions to new boundaries
-            const clampedX = Math.max(radius, Math.min(width - radius, bubble.x))
-            const clampedY = Math.max(80 + radius, Math.min(height - radius, bubble.y))
-            
-            return {
-              ...bubble,
-              x: clampedX,
-              y: clampedY
-            }
-          })
-          
-          // Try to resolve overlaps by pushing bubbles apart
-          const maxIterations = 100
-          let iteration = 0
-          let hasOverlap = true
-          
-          while (hasOverlap && iteration < maxIterations) {
-            hasOverlap = false
-            iteration++
-            
-            for (let i = 0; i < squeezedBubbles.length; i++) {
-              for (let j = i + 1; j < squeezedBubbles.length; j++) {
-                const b1 = squeezedBubbles[i]
-                const b2 = squeezedBubbles[j]
-                
-                // Skip dragged bubble
-                if (b1.id === dragStateRef.current.draggedBubbleId || 
-                    b2.id === dragStateRef.current.draggedBubbleId) continue
-                
-                const dx = b2.x - b1.x
-                const dy = b2.y - b1.y
-                const distance = Math.sqrt(dx * dx + dy * dy)
-                const minDist = b1.radius + b2.radius
-                
-                if (distance < minDist) {
-                  hasOverlap = true
-                  
-                  const epsilon = 0.0001
-                  const actualDistance = Math.max(distance, epsilon)
-                  const dirX = dx / actualDistance
-                  const dirY = dy / actualDistance
-                  const overlap = minDist - distance
-                  
-                  // Push both bubbles apart
-                  const pushAmount = overlap / 2
-                  
-                  b1.x -= dirX * pushAmount
-                  b1.y -= dirY * pushAmount
-                  b2.x += dirX * pushAmount
-                  b2.y += dirY * pushAmount
-                  
-                  // Clamp to boundaries
-                  b1.x = Math.max(radius, Math.min(width - radius, b1.x))
-                  b1.y = Math.max(80 + radius, Math.min(height - radius, b1.y))
-                  b2.x = Math.max(radius, Math.min(width - radius, b2.x))
-                  b2.y = Math.max(80 + radius, Math.min(height - radius, b2.y))
-                }
-              }
-            }
-          }
-          
-          // If still overlapping after max iterations, burst random bubbles
-          if (hasOverlap) {
-            const bubblesNeededToRemove = currentCount - targetBubbleCount
-            const nonDraggedBubbles = squeezedBubbles.filter(
-              b => b.id !== dragStateRef.current.draggedBubbleId
-            )
-            
-            // Randomly select bubbles to burst
-            const shuffled = [...nonDraggedBubbles].sort(() => Math.random() - 0.5)
-            const bubblesKept = shuffled.slice(bubblesNeededToRemove)
-            
-            // Add back dragged bubble if it exists
-            const draggedBubble = squeezedBubbles.find(
-              b => b.id === dragStateRef.current.draggedBubbleId
-            )
-            if (draggedBubble) {
-              bubblesKept.push(draggedBubble)
-            }
-            
-            bubblesRef.current = bubblesKept
-            setBubbles([...bubblesKept])
-          } else {
-            bubblesRef.current = squeezedBubbles
-            setBubbles([...squeezedBubbles])
-          }
-        }
-      }, 300) // Wait 300ms after resize stops
-    }
-    
-    window.addEventListener('resize', handleResize)
-    
-    return () => {
-      window.removeEventListener('resize', handleResize)
-      clearTimeout(resizeTimeout)
-    }
-  }, [])
-
-  // Initialize bubbles on mount - fill screen with non-overlapping bubbles
+  // Initialize bubbles on mount - start with just 2 bubbles with value 1
   useEffect(() => {
     const width = window.innerWidth
     const height = window.innerHeight
     const radius = 25
-    const minDistance = radius * 2 // Bubbles can touch but not overlap
     
-    // Calculate maximum bubbles based on screen area
-    const area = width * (height - 100)
-    const bubbleArea = Math.PI * radius * radius
-    const maxBubbles = Math.floor(area / (bubbleArea * 1.5)) // Dense packing factor
-    
+    // Create 2 initial bubbles with value 1 at random positions
     const initialBubbles = []
-    let attempts = 0
-    const maxAttempts = maxBubbles * 10
     
-    // Place bubbles randomly, ensuring no overlap
-    while (initialBubbles.length < maxBubbles && attempts < maxAttempts) {
-      const x = Math.random() * (width - radius * 2) + radius
-      const y = Math.random() * (height - 100 - radius * 2) + radius + 80
+    // First bubble
+    const x1 = Math.random() * (width - radius * 4) + radius * 2
+    const y1 = Math.random() * (height - 180) + radius + 80
+    
+    initialBubbles.push({
+      id: Date.now(),
+      x: x1,
+      y: y1,
+      vx: 0,
+      vy: 0,
+      value: 1,
+      radius,
+      isDragging: false,
+      isHighlighted: false,
+      cannotMerge: false
+    })
+    
+    // Second bubble - ensure it's not too close to the first
+    let x2, y2, distance
+    let attempts = 0
+    const minDistance = radius * 4 // Ensure some spacing
+    
+    do {
+      x2 = Math.random() * (width - radius * 4) + radius * 2
+      y2 = Math.random() * (height - 180) + radius + 80
       
-      // Check distance to all existing bubbles
-      let tooClose = false
-      for (const bubble of initialBubbles) {
-        const dx = x - bubble.x
-        const dy = y - bubble.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        
-        if (distance < minDistance) {
-          tooClose = true
-          break
-        }
-      }
-      
-      if (!tooClose) {
-        initialBubbles.push({
-          id: Date.now() + initialBubbles.length,
-          x,
-          y,
-          vx: 0,
-          vy: 0,
-          value: 1,
-          radius,
-          isDragging: false,
-          isHighlighted: false,
-          cannotMerge: false
-        })
-      }
-      
+      const dx = x2 - x1
+      const dy = y2 - y1
+      distance = Math.sqrt(dx * dx + dy * dy)
       attempts++
-    }
+    } while (distance < minDistance && attempts < 100)
+    
+    initialBubbles.push({
+      id: Date.now() + 1,
+      x: x2,
+      y: y2,
+      vx: 0,
+      vy: 0,
+      value: 1,
+      radius,
+      isDragging: false,
+      isHighlighted: false,
+      cannotMerge: false
+    })
     
     bubblesRef.current = initialBubbles
     setBubbles(initialBubbles)

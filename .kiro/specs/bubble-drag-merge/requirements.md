@@ -126,5 +126,7 @@ Phase 2 -----------------------------------
 9. How many bubbles you have merged
 10. Share your score 
 
-#### Bugs
+##### Bugs
 1. The second drag action will drag the whole canvas instead of the selected bubble, after releasing the drag action, possibly a close-by bubble will be automatically selected, which you need to click again to release the bubble. Ideal result should be, only select and release the bubble by clicking and releasing the cursor, and only drag the bubble by holding the cursor. 
+2. The red outline shows when the bubbles are not touching, and there is no clicking/holding/dragging action happening.
+3. The resizing (specifically reduce the screensize) only works with there are bubbles moving around. It doesn't work when all bubbles are static.
