@@ -49,12 +49,17 @@ function BubbleGame() {
   /**
    * Detect collisions between the dragged bubble and all other bubbles.
    * Returns both the closest collision and all collisions for processing.
+   * Uses dynamic collision threshold based on movement speed:
+   * - Slow movement (< 5px/frame): requires 60% overlap (softer, more precise)
+   * - Medium movement (5-15px/frame): requires 75% overlap (balanced)
+   * - Fast movement (> 15px/frame): requires 90% overlap (easier merging)
    * 
    * @param {Object} draggedBubble - The bubble being dragged
    * @param {Array} allBubbles - Array of all bubbles in the game
+   * @param {number} moveSpeed - Current movement speed in pixels per frame
    * @returns {Object} Object containing closestCollision and allCollisions arrays
    */
-  const detectDragCollision = (draggedBubble, allBubbles) => {
+  const detectDragCollision = (draggedBubble, allBubbles, moveSpeed = 0) => {
     let closestCollision = {
       collided: false,
       targetBubble: null,
@@ -63,6 +68,16 @@ function BubbleGame() {
     }
     
     const allCollisions = []
+    
+    // Dynamic collision threshold based on movement speed
+    let overlapFactor
+    if (moveSpeed < 5) {
+      overlapFactor = 0.6 // Slow: requires more overlap (softer)
+    } else if (moveSpeed < 15) {
+      overlapFactor = 0.75 // Medium: balanced
+    } else {
+      overlapFactor = 0.9 // Fast: easier to merge
+    }
 
     for (const bubble of allBubbles) {
       if (bubble.id === draggedBubble.id) continue
@@ -70,7 +85,9 @@ function BubbleGame() {
       const dx = bubble.x - draggedBubble.x
       const dy = bubble.y - draggedBubble.y
       const distance = Math.sqrt(dx * dx + dy * dy)
-      const minDist = draggedBubble.radius + bubble.radius
+      
+      // Apply dynamic collision threshold
+      const minDist = (draggedBubble.radius + bubble.radius) * overlapFactor
 
       if (distance <= minDist) {
         const collision = {
@@ -271,6 +288,11 @@ function BubbleGame() {
       return
     }
 
+    // Calculate movement speed for dynamic collision threshold
+    const dx = event.clientX - dragStateRef.current.lastMouseX
+    const dy = event.clientY - dragStateRef.current.lastMouseY
+    const moveSpeed = Math.sqrt(dx * dx + dy * dy)
+
     // Update position to cursor, clamped to boundaries
     const width = window.innerWidth
     const height = window.innerHeight
@@ -290,7 +312,7 @@ function BubbleGame() {
     })
 
     // Check for collisions and handle merge/repulsion
-    const { closestCollision, allCollisions } = detectDragCollision(bubble, bubblesRef.current)
+    const { closestCollision, allCollisions } = detectDragCollision(bubble, bubblesRef.current, moveSpeed)
     
     if (closestCollision.collided) {
       if (closestCollision.canMerge) {
@@ -303,7 +325,7 @@ function BubbleGame() {
         // Continue checking for collisions with the newly merged bubble
         // This allows chain merging in a single drag gesture
         const { closestCollision: newCollision, allCollisions: newAllCollisions } = 
-          detectDragCollision(mergedBubble, bubblesRef.current)
+          detectDragCollision(mergedBubble, bubblesRef.current, moveSpeed)
         
         if (newCollision.collided && !newCollision.canMerge) {
           // Apply repulsion to non-matching bubbles after merge
