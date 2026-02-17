@@ -116,6 +116,15 @@ This document specifies the requirements for adding drag-and-merge functionality
 2. Spacing among bubbles
 3. Visual of the view, including the bubbles, collision indicator
 4. Responsiveness
+    4.a When the screen size is bigger, add more bubbles
+    4.b When the screen size is smaller, burst bubbles that don't fit into the screen
 5. Respawn more bubbles after merging (kind of, needs fine-tuning)
 6. The position of the bubble when clicked. The current animation is that the bubble shifts its position when clicked
 7. The merging animation needs to be more subtle, the current one is too abrupt
+8. Define the math method to make sure the number can grow infinitely
+Phase 2 -----------------------------------
+9. How many bubbles you have merged
+10. Share your score 
+
+#### Bugs
+1. The second drag action will drag the whole canvas instead of the selected bubble, after releasing the drag action, possibly a close-by bubble will be automatically selected, which you need to click again to release the bubble. Ideal result should be, only select and release the bubble by clicking and releasing the cursor, and only drag the bubble by holding the cursor. 
