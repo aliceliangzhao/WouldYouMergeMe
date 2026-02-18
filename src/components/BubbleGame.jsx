@@ -213,11 +213,16 @@ function BubbleGame() {
   /**
    * Apply repulsion force to target bubble when values don't match.
    * Pushes the target bubble away from the dragged bubble and prevents overlap.
+   * Uses dynamic repulsion strength based on movement speed:
+   * - Slow movement (< 5px/frame): gentle repulsion (2-3 px/frame)
+   * - Medium movement (5-15px/frame): moderate repulsion (5-6 px/frame)
+   * - Fast movement (> 15px/frame): strong repulsion (8-10 px/frame)
    * 
    * @param {Object} draggedBubble - The bubble being dragged by the user
    * @param {Object} targetBubble - The bubble to apply repulsion force to
+   * @param {number} moveSpeed - Current movement speed in pixels per frame
    */
-  const applyRepulsion = (draggedBubble, targetBubble) => {
+  const applyRepulsion = (draggedBubble, targetBubble, moveSpeed = 0) => {
     // Calculate direction vector from dragged to target
     const dx = targetBubble.x - draggedBubble.x
     const dy = targetBubble.y - draggedBubble.y
@@ -232,7 +237,16 @@ function BubbleGame() {
     // Normalize direction and apply repulsion force
     const dirX = dx / distance
     const dirY = dy / distance
-    const repulsionStrength = 5 // Tunable parameter for game feel
+    
+    // Dynamic repulsion strength based on movement speed
+    let repulsionStrength
+    if (moveSpeed < 5) {
+      repulsionStrength = 1 + Math.random() // Slow: gentle repulsion (2-3 px/frame)
+    } else if (moveSpeed < 15) {
+      repulsionStrength = 5 + Math.random() // Medium: moderate repulsion (5-6 px/frame)
+    } else {
+      repulsionStrength = 8 + Math.random() * 2 // Fast: strong repulsion (8-10 px/frame)
+    }
 
     // Add velocity to target bubble (dragged bubble is unaffected)
     targetBubble.vx += dirX * repulsionStrength
@@ -291,7 +305,14 @@ function BubbleGame() {
     // Calculate movement speed for dynamic collision threshold
     const dx = event.clientX - dragStateRef.current.lastMouseX
     const dy = event.clientY - dragStateRef.current.lastMouseY
+    // Calculate speed using Pythagorean theorem
     const moveSpeed = Math.sqrt(dx * dx + dy * dy)
+    // Result: speed in pixels per frame (typically 60fps)
+    //Example:
+    //Mouse moved from (100, 100) to (110, 105)
+    //dx = 10, dy = 5
+    //moveSpeed = √(10² + 5²) = √125 ≈ 11.18 pixels/frame
+
 
     // Update position to cursor, clamped to boundaries
     const width = window.innerWidth
@@ -333,7 +354,7 @@ function BubbleGame() {
             if (!collision.canMerge) {
               mergedBubble.cannotMerge = true
               collision.targetBubble.cannotMerge = true
-              applyRepulsion(mergedBubble, collision.targetBubble)
+              applyRepulsion(mergedBubble, collision.targetBubble, moveSpeed)
             }
           }
         }
@@ -346,7 +367,7 @@ function BubbleGame() {
             bubble.cannotMerge = true
             collision.targetBubble.cannotMerge = true
             
-            applyRepulsion(bubble, collision.targetBubble)
+            applyRepulsion(bubble, collision.targetBubble, moveSpeed)
           }
         }
       }
