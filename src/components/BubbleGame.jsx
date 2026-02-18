@@ -606,8 +606,9 @@ function BubbleGame() {
 
   return (
     <div className="bubble-game" ref={containerRef}>
+      <div className="background-blob"></div>
       <div className="game-header">
-        <h1>Bubble Merge Game</h1>
+        <button className="game-title-button">WOULD YOU MERGE ME?</button>
       </div>
       {bubbles.map(bubble => (
         <Bubble

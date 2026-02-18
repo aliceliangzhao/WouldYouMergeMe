@@ -1,7 +1,7 @@
 .bubble-game {
   width: 100vw;
   height: 100vh;
-  background: white;
+  background:#1d1d1d;
   position: relative;
   overflow: hidden;
 }
@@ -14,8 +14,53 @@
   z-index: 100;
 }
 
-.game-header h1 {
-  color: white;
+.game-title-button {
+  color: rgb(0, 0, 0);
   font-size: 2rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  font-weight: regular;
+  font-family: 'Red Hat Display', sans-serif !important;
+  background: #dbdbdb;
+  border: none;
+  padding: 12px 70px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 2rem;
+  white-space: nowrap;
+}
+
+.game-title-button:hover {
+  background: #fefe64;
+  /* transform: scale(1.02); */
+}
+
+.game-title-button:active {
+  /* transform: scale(0.98); */
+}
+
+.background-blob {
+  position: absolute;
+  bottom: -200px;
+  left: -200px;
+  width: 700px;
+  height: 700px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: wave 8s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -20px) scale(1.05);
+  }
+  50% {
+    transform: translate(0, -40px) scale(1);
+  }
+  75% {
+    transform: translate(-30px, -20px) scale(0.95);
+  }
 }
