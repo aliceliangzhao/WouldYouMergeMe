@@ -6,12 +6,95 @@
   overflow: hidden;
 }
 
-.game-header {
+.game-nav {
   position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
   z-index: 100;
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.nav-info-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.nav-info-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.theme-toggle {
+  position: relative;
+  display: flex;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 4px;
+  border-radius: 24px;
+  width: 96px;
+  height: 48px;
+}
+
+.theme-toggle::before {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  top: 4px;
+  left: 4px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+
+.theme-toggle[data-theme="dark"]::before {
+  transform: translateX(44px);
+}
+
+.theme-option {
+  width: 44px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.theme-option:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.theme-option.active {
+  color: rgba(0, 0, 0, 0.8);
 }
 
 .game-title-button {
@@ -19,12 +102,13 @@
   font-size: 2rem;
   font-weight: regular;
   font-family: 'Red Hat Display', sans-serif !important;
-  background: #dbdbdb;
+  background: #7d7d7d;
+  opacity: 0.4;
   border: none;
   padding: 12px 70px;
   cursor: pointer;
   transition: all 0.3s ease;
-  border-radius: 2rem;
+  /* border-radius: 2rem; */
   white-space: nowrap;
 }
 
@@ -37,7 +121,7 @@
   /* transform: scale(0.98); */
 }
 
-.background-blob {
+/* .background-blob {
   position: absolute;
   bottom: -200px;
   left: -200px;
@@ -63,4 +147,4 @@
   75% {
     transform: translate(-30px, -20px) scale(0.95);
   }
-}
+} */

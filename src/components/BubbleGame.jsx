@@ -11,6 +11,7 @@ function BubbleGame() {
     lastMouseY: 0,
     dragStartTime: 0
   })
+  const [theme, setTheme] = useState('dark') // 'light' or 'dark'
   const containerRef = useRef(null)
   const animationRef = useRef(null)
   const bubblesRef = useRef([])
@@ -20,6 +21,13 @@ function BubbleGame() {
   useEffect(() => {
     dragStateRef.current = dragState
   }, [dragState])
+
+  /**
+   * Handle theme toggle between light and dark modes
+   */
+  const handleThemeToggle = (newTheme) => {
+    setTheme(newTheme)
+  }
 
   /**
    * Event handler for mouse down on a bubble.
@@ -152,8 +160,10 @@ function BubbleGame() {
     const possibleValues = [1, 2, 4, 8]
     
     // Create new bubbles with random values from [1, 2, 4, 8]
+    // First bubble always has the merged value
     for (let i = 0; i < numNewBubbles; i++) {
-      const value = possibleValues[Math.floor(Math.random() * possibleValues.length)]
+      // First bubble gets merged value, rest get random values
+      const value = i === 0 ? mergedValue : possibleValues[Math.floor(Math.random() * possibleValues.length)]
       let attempts = 0
       const maxAttempts = 100
       let validPosition = false
@@ -606,10 +616,41 @@ function BubbleGame() {
 
   return (
     <div className="bubble-game" ref={containerRef}>
-      <div className="background-blob"></div>
-      <div className="game-header">
-        <button className="game-title-button">WOULD YOU MERGE ME?</button>
-      </div>
+      {/* <div className="background-blob"></div> */}
+      <nav className="game-nav">
+        <button className="nav-info-button" aria-label="Information">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2"/>
+            <path d="M10 10V14M10 6V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </button>
+        
+        <div className="game-header">
+          <button className="game-title-button">WOULD YOU MERGE ME?</button>
+        </div>
+        
+        <div className="theme-toggle" data-theme={theme}>
+          <button 
+            className={`theme-option ${theme === 'light' ? 'active' : ''}`}
+            aria-label="Light mode"
+            onClick={() => handleThemeToggle('light')}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="4" fill="currentColor"/>
+              <path d="M10 2V4M10 16V18M18 10H16M4 10H2M15.66 4.34L14.24 5.76M5.76 14.24L4.34 15.66M15.66 15.66L14.24 14.24M5.76 5.76L4.34 4.34" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+          <button 
+            className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
+            aria-label="Dark mode"
+            onClick={() => handleThemeToggle('dark')}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17 10.5C16.1 14.4 12.6 17 8.5 17C4.4 17 1 13.6 1 9.5C1 5.4 3.6 1.9 7.5 1C6.6 2.1 6 3.5 6 5C6 8.3 8.7 11 12 11C13.5 11 14.9 10.4 16 9.5C16.7 9.8 17 10.1 17 10.5Z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+      </nav>
       {bubbles.map(bubble => (
         <Bubble
           key={bubble.id}
