@@ -1,16 +1,14 @@
 .bubble {
   position: absolute;
   border-radius: 50%;
-  /* background: radial-gradient(circle at 30% 30%, rgba(243, 243, 243, 0.9), rgba(196, 230, 251, 0.7)); */
-  background: #fff;
+  background: var(--bubble-bg);
   backdrop-filter: blur(10px);
-  /* border: 2px solid rgba(219, 233, 245, 0.5); */
+  border: 1px solid var(--bubble-border);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s;
-  /* box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); */
+  transition: transform 0.2s, background 0.3s ease, border 0.3s ease;
 }
 
 .bubble:hover {
@@ -20,8 +18,13 @@
 .bubble-value {
   font-size: 1.2rem;
   font-weight: regular;
-  color: #333;
+  color: var(--bubble-text);
   user-select: none;
+  transition: color 0.3s ease;
+}
+
+.bubble-game[data-theme="light"] .bubble-value {
+  color: #212121;
 }
 
 /* Dragging state - scale, shadow, z-index */

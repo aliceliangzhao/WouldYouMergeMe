@@ -155,7 +155,7 @@ function BubbleGame() {
     const numNewBubbles = Math.floor(Math.random() * 3) + 5 // 5-7 bubbles
     const width = window.innerWidth
     const height = window.innerHeight
-    const radius = 25
+    const radius = 40
     const minDistance = radius * 2.5
     const possibleValues = [1, 2, 4, 8]
     
@@ -445,7 +445,7 @@ function BubbleGame() {
   useEffect(() => {
     const width = window.innerWidth
     const height = window.innerHeight
-    const radius = 25
+    const radius = 40
     
     // Create 2 initial bubbles with value 1 at random positions
     const initialBubbles = []
@@ -615,7 +615,7 @@ function BubbleGame() {
   }, [])
 
   return (
-    <div className="bubble-game" ref={containerRef}>
+    <div className="bubble-game" ref={containerRef} data-theme={theme}>
       {/* <div className="background-blob"></div> */}
       <nav className="game-nav">
         <button className="nav-info-button" aria-label="Information">
@@ -626,7 +626,7 @@ function BubbleGame() {
         </button>
         
         <div className="game-header">
-          <button className="game-title-button">WOULD YOU MERGE ME?</button>
+          <div className="game-title">WOULD YOU MERGE ME?</div>
         </div>
         
         <div className="theme-toggle" data-theme={theme}>
