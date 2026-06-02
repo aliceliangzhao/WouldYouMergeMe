@@ -12,6 +12,7 @@ function BubbleGame() {
     dragStartTime: 0
   })
   const [theme, setTheme] = useState('dark') // 'light' or 'dark'
+  const [showInfo, setShowInfo] = useState(false)
   const containerRef = useRef(null)
   const animationRef = useRef(null)
   const bubblesRef = useRef([])
@@ -618,7 +619,7 @@ function BubbleGame() {
     <div className="bubble-game" ref={containerRef} data-theme={theme}>
       {/* <div className="background-blob"></div> */}
       <nav className="game-nav">
-        <button className="nav-info-button" aria-label="Information">
+        <button className="nav-info-button" aria-label="Information" onClick={() => setShowInfo(!showInfo)}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2"/>
             <path d="M10 10V14M10 6V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -651,6 +652,13 @@ function BubbleGame() {
           </button>
         </div>
       </nav>
+      {showInfo && (
+        <div className="info-overlay" onClick={() => setShowInfo(false)}>
+          <div className="info-panel" onClick={(e) => e.stopPropagation()}>
+            <p>Merge bubbles with the same number by dragging one into another. Their values add together, and new bubbles spawn. Mismatched bubbles bounce off each other, so find the right pairs and chain merges to grow your numbers as high as possible.</p>
+          </div>
+        </div>
+      )}
       {bubbles.map(bubble => (
         <Bubble
           key={bubble.id}
