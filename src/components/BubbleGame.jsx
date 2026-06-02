@@ -13,15 +13,40 @@ function BubbleGame() {
   })
   const [theme, setTheme] = useState('dark') // 'light' or 'dark'
   const [showInfo, setShowInfo] = useState(false)
+  const [gameMode, setGameMode] = useState('chill') // 'chill' or 'noChill'
+  const [countdown, setCountdown] = useState(null) // 3, 2, 1, 'Start', or null
+  const [timeLeft, setTimeLeft] = useState(60)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [gameOver, setGameOver] = useState(false)
+  const [score, setScore] = useState(0)
+  const [mergeCount, setMergeCount] = useState(0)
   const containerRef = useRef(null)
   const animationRef = useRef(null)
   const bubblesRef = useRef([])
   const dragStateRef = useRef(dragState)
+  const timerRef = useRef(null)
+  const gameOverRef = useRef(false)
+  const gameModeRef = useRef('chill')
+  const isPlayingRef = useRef(false)
+  const scoreRef = useRef(0)
+  const mergeCountRef = useRef(0)
 
   // Keep dragStateRef in sync with dragState
   useEffect(() => {
     dragStateRef.current = dragState
   }, [dragState])
+
+  useEffect(() => {
+    gameOverRef.current = gameOver
+  }, [gameOver])
+
+  useEffect(() => {
+    gameModeRef.current = gameMode
+  }, [gameMode])
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying
+  }, [isPlaying])
 
   /**
    * Handle theme toggle between light and dark modes
@@ -29,6 +54,63 @@ function BubbleGame() {
   const handleThemeToggle = (newTheme) => {
     setTheme(newTheme)
   }
+
+  const handleGameModeToggle = (mode) => {
+    setGameMode(mode)
+    if (mode === 'chill') {
+      setIsPlaying(false)
+      setGameOver(false)
+      gameOverRef.current = false
+      setTimeLeft(60)
+      setScore(0)
+      setMergeCount(0)
+      setCountdown(null)
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }
+
+  const startNoChill = () => {
+    setScore(0)
+    setMergeCount(0)
+    setTimeLeft(60)
+    setGameOver(false)
+    gameOverRef.current = false
+    scoreRef.current = 0
+    mergeCountRef.current = 0
+
+    let count = 3
+    setCountdown(count)
+    const countdownInterval = setInterval(() => {
+      count--
+      if (count > 0) {
+        setCountdown(count)
+      } else if (count === 0) {
+        setCountdown('Start')
+      } else {
+        clearInterval(countdownInterval)
+        setCountdown(null)
+        setIsPlaying(true)
+        timerRef.current = setInterval(() => {
+          setTimeLeft(prev => {
+            if (prev <= 1) {
+              clearInterval(timerRef.current)
+              setIsPlaying(false)
+              setGameOver(true)
+              gameOverRef.current = true
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
+      }
+    }, 1000)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [])
 
   /**
    * Event handler for mouse down on a bubble.
@@ -345,14 +427,22 @@ function BubbleGame() {
 
     // Check for collisions and handle merge/repulsion
     const { closestCollision, allCollisions } = detectDragCollision(bubble, bubblesRef.current, moveSpeed)
-    
+
     if (closestCollision.collided) {
-      if (closestCollision.canMerge) {
+      if (closestCollision.canMerge && !gameOverRef.current) {
         // Highlight both bubbles and merge
         bubble.isHighlighted = true
         closestCollision.targetBubble.isHighlighted = true
-        
+
+        const mergedValue = bubble.value + closestCollision.targetBubble.value
         const mergedBubble = mergeBubbles(bubble, closestCollision.targetBubble)
+
+        if (gameModeRef.current === 'noChill' && isPlayingRef.current) {
+          scoreRef.current += mergedValue
+          mergeCountRef.current += 1
+          setScore(scoreRef.current)
+          setMergeCount(mergeCountRef.current)
+        }
         
         // Continue checking for collisions with the newly merged bubble
         // This allows chain merging in a single drag gesture
@@ -618,20 +708,43 @@ function BubbleGame() {
   return (
     <div className="bubble-game" ref={containerRef} data-theme={theme}>
       {/* <div className="background-blob"></div> */}
-      <nav className="game-nav">
-        <button className="nav-info-button" aria-label="Information" onClick={() => setShowInfo(!showInfo)}>
+      <nav className={`game-nav ${gameMode === 'noChill' ? 'nochill' : ''}`}>
+        <button
+          className={`mode-button ${gameMode === 'noChill' ? 'active' : ''}`}
+          onClick={() => handleGameModeToggle(gameMode === 'chill' ? 'noChill' : 'chill')}
+          aria-label="Toggle timed mode"
+        >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2"/>
-            <path d="M10 10V14M10 6V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <circle cx="10" cy="12" r="7" stroke="currentColor" strokeWidth="2"/>
+            <path d="M10 9V12L12 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M8 3H12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M10 3V5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
         </button>
         
         <div className="game-header">
-          <div className="game-title">WOULD YOU MERGE ME?</div>
+          {gameMode === 'chill' ? (
+            <div className="game-title">WOULD YOU MERGE ME?</div>
+          ) : (
+            <div className="nav-hud">
+              <div className="hud-item">
+                <span className="hud-label">Time</span>
+                <span className="hud-value">{timeLeft}s</span>
+              </div>
+              <div className="hud-item">
+                <span className="hud-label">Points</span>
+                <span className="hud-value">{score}</span>
+              </div>
+              <div className="hud-item">
+                <span className="hud-label">Merged</span>
+                <span className="hud-value">{mergeCount}</span>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="theme-toggle" data-theme={theme}>
-          <button 
+          <button
             className={`theme-option ${theme === 'light' ? 'active' : ''}`}
             aria-label="Light mode"
             onClick={() => handleThemeToggle('light')}
@@ -641,7 +754,7 @@ function BubbleGame() {
               <path d="M10 2V4M10 16V18M18 10H16M4 10H2M15.66 4.34L14.24 5.76M5.76 14.24L4.34 15.66M15.66 15.66L14.24 14.24M5.76 5.76L4.34 4.34" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
-          <button 
+          <button
             className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
             aria-label="Dark mode"
             onClick={() => handleThemeToggle('dark')}
@@ -659,6 +772,35 @@ function BubbleGame() {
           </div>
         </div>
       )}
+      {gameMode === 'noChill' && !isPlaying && !gameOver && !countdown && (
+        <button className="start-button" onClick={startNoChill}>Start</button>
+      )}
+      {countdown && (
+        <div className="countdown-overlay">
+          <span className="countdown-text">{countdown}</span>
+        </div>
+      )}
+      {gameOver && (
+        <div className="gameover-overlay">
+          <div className="gameover-panel">
+            <h2>Time's Up!</h2>
+            <div className="gameover-stats">
+              <div className="gameover-stat">
+                <span className="gameover-label">Points</span>
+                <span className="gameover-value">{score}</span>
+              </div>
+              <div className="gameover-stat">
+                <span className="gameover-label">Bubbles Merged</span>
+                <span className="gameover-value">{mergeCount}</span>
+              </div>
+            </div>
+            <div className="gameover-actions">
+              <button className="start-button" onClick={startNoChill}>Play Again</button>
+              <button className="chill-button" onClick={() => handleGameModeToggle('chill')}>Chill</button>
+            </div>
+          </div>
+        </div>
+      )}
       {bubbles.map(bubble => (
         <Bubble
           key={bubble.id}
@@ -672,6 +814,14 @@ function BubbleGame() {
           cannotMerge={bubble.cannotMerge}
         />
       ))}
+      <footer className="game-footer">
+        <button className="nav-info-button" aria-label="Information" onClick={() => setShowInfo(!showInfo)}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="2"/>
+            <path d="M10 10V14M10 6V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </button>
+      </footer>
     </div>
   )
 }
