@@ -15,7 +15,7 @@ function BubbleGame() {
   const [showInfo, setShowInfo] = useState(false)
   const [gameMode, setGameMode] = useState('chill') // 'chill' or 'noChill'
   const [countdown, setCountdown] = useState(null) // 3, 2, 1, 'Start', or null
-  const [timeLeft, setTimeLeft] = useState(60)
+  const [timeLeft, setTimeLeft] = useState(60000)
   const [isPlaying, setIsPlaying] = useState(false)
   const [gameOver, setGameOver] = useState(false)
   const [score, setScore] = useState(0)
@@ -61,7 +61,7 @@ function BubbleGame() {
       setIsPlaying(false)
       setGameOver(false)
       gameOverRef.current = false
-      setTimeLeft(60)
+      setTimeLeft(60000)
       setScore(0)
       setMergeCount(0)
       setCountdown(null)
@@ -72,7 +72,7 @@ function BubbleGame() {
   const startNoChill = () => {
     setScore(0)
     setMergeCount(0)
-    setTimeLeft(60)
+    setTimeLeft(60000)
     setGameOver(false)
     gameOverRef.current = false
     scoreRef.current = 0
@@ -90,18 +90,18 @@ function BubbleGame() {
         clearInterval(countdownInterval)
         setCountdown(null)
         setIsPlaying(true)
+        const startTime = Date.now()
         timerRef.current = setInterval(() => {
-          setTimeLeft(prev => {
-            if (prev <= 1) {
-              clearInterval(timerRef.current)
-              setIsPlaying(false)
-              setGameOver(true)
-              gameOverRef.current = true
-              return 0
-            }
-            return prev - 1
-          })
-        }, 1000)
+          const elapsed = Date.now() - startTime
+          const remaining = Math.max(0, 60000 - elapsed)
+          setTimeLeft(remaining)
+          if (remaining <= 0) {
+            clearInterval(timerRef.current)
+            setIsPlaying(false)
+            setGameOver(true)
+            gameOverRef.current = true
+          }
+        }, 10)
       }
     }, 1000)
   }
@@ -729,7 +729,7 @@ function BubbleGame() {
             <div className="nav-hud">
               <div className="hud-item">
                 <span className="hud-label">Time</span>
-                <span className="hud-value">{timeLeft}s</span>
+                <span className="hud-value">{Math.floor(timeLeft / 1000)}:{String(Math.floor((timeLeft % 1000) / 10)).padStart(2, '0')}</span>
               </div>
               <div className="hud-item">
                 <span className="hud-label">Points</span>
@@ -768,7 +768,17 @@ function BubbleGame() {
       {showInfo && (
         <div className="info-overlay" onClick={() => setShowInfo(false)}>
           <div className="info-panel" onClick={(e) => e.stopPropagation()}>
-            <p>Merge bubbles with the same number by dragging one into another. Their values add together, and new bubbles spawn. Mismatched bubbles bounce off each other, so find the right pairs and chain merges to grow your numbers as high as possible.</p>
+            <p>Drag a bubble into another with the same number to merge them.</p>
+            <div className="info-modes">
+              <div className="info-mode">
+                <span className="info-mode-title">Chill mode</span>
+                <span className="info-mode-desc">No timer, no score. Just merge at your own pace.</span>
+              </div>
+              <div className="info-mode">
+                <span className="info-mode-title">noChill mode</span>
+                <span className="info-mode-desc">Activate the noChill mode via the clock icon. In 60 seconds, merge as many bubbles as you can.</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
