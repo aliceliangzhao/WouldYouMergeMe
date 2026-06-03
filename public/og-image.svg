@@ -1,0 +1,22 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2B2BFF"/>
+      <stop offset="100%" style="stop-color:#1d1d1d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Bubbles -->
+  <circle cx="200" cy="420" r="70" fill="white" opacity="0.9"/>
+  <text x="200" y="435" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="40" font-weight="400" fill="#1d1d1d">2</text>
+  <circle cx="380" cy="350" r="70" fill="white" opacity="0.9"/>
+  <text x="380" y="365" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="40" font-weight="400" fill="#1d1d1d">4</text>
+  <circle cx="820" cy="380" r="70" fill="white" opacity="0.9"/>
+  <text x="820" y="395" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="40" font-weight="400" fill="#1d1d1d">8</text>
+  <circle cx="1000" cy="450" r="70" fill="white" opacity="0.9"/>
+  <text x="1000" y="465" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="40" font-weight="400" fill="#1d1d1d">1</text>
+  <circle cx="600" cy="480" r="70" fill="white" opacity="0.9"/>
+  <text x="600" y="495" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="40" font-weight="400" fill="#1d1d1d">2</text>
+  <!-- Title -->
+  <text x="600" y="220" text-anchor="middle" font-family="Red Hat Display, system-ui, sans-serif" font-size="72" font-weight="500" fill="white" letter-spacing="-2">WOULD YOU MERGE ME?</text>
+</svg>
